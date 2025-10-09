@@ -1,0 +1,55 @@
+// Prisma Schema - Agro
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+model Categorias {
+  id        Int       @id @default(autoincrement())
+  nome      String    @db.VarChar(50)
+  produtos  Produto[]
+  @@map("categorias")
+}
+
+model Produto {
+  id          Int        @id @default(autoincrement())
+  nome        String     @db.VarChar(60)
+  descricao   String?    @db.VarChar(255)
+  preco       Decimal    @db.Decimal(10, 2)
+  estoque     Int        @default(0)    // quantidade em estoque
+  unidade     Unidade    @default(UNIDADE)
+  foto        String?
+  destaque    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt()
+  categoria   Categorias  @relation(fields: [categoriaId], references: [id])
+  categoriaId Int
+  @@map("produtos")
+}
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(60)
+  email     String   @db.VarChar(40)
+  senha     String   @db.VarChar(60)   // senha bcrypt
+  cidade    String   @db.VarChar(30) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("clientes")
+}
+
+enum Unidade {
+  KG
+  LITRO
+  SACA
+  TONELADA
+  UNIDADE
+}
+
+
+
