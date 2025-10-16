@@ -1,4 +1,4 @@
-import { Unidade, PrismaClient } from '@prisma/client'
+import { PrismaClient, Unidade } from '@prisma/client'
 import { Router } from 'express'
 import { z } from 'zod'
 
@@ -24,9 +24,9 @@ const produtoUpdateSchema = produtoSchema.partial()
 // Listar todos os produtos
 router.get("/", async (req, res) => {
   try {
-    const produtos = await prisma.produto.findMany({
+    const produtos = await prisma.produtos.findMany({
       include: {
-        categoria: true,
+        categorias: true,
       }
     })
     res.status(200).json(produtos)
@@ -40,10 +40,10 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params
 
   try {
-    const produto = await prisma.produto.findFirst({
+    const produto = await prisma.produtos.findFirst({
       where: { id: Number(id) },
       include: {
-        categoria: true,
+        categorias: true,
       }
     })
     res.status(200).json(produto)
@@ -61,16 +61,23 @@ router.post("/", async (req, res) => {
   }
 
   const {
-    nome, descricao = null, preco, estoque,
-    foto = null, unidade = 'UNIDADE',
+    nome, descricao, preco, estoque,
+    foto, unidade = 'UNIDADE',
     destaque = false, categoriaId
   } = valida.data
 
   try {
-    const produto = await prisma.produto.create({
+    const produto = await prisma.produtos.create({
       data: {
-        nome, descricao, preco, estoque,
-        foto, unidade, destaque, categoriaId
+        nome,
+        descricao: descricao ?? null,
+        preco,
+        estoque,
+        foto: foto ?? null,
+        unidade,
+        destaque,
+        categoriaId,
+        updatedAt: new Date()
       }
     })
     res.status(201).json(produto)
@@ -84,7 +91,7 @@ router.delete("/:id", async (req, res) => {
   const { id } = req.params
 
   try {
-    const produto = await prisma.produto.delete({
+    const produto = await prisma.produtos.delete({
       where: { id: Number(id) }
     })
     res.status(200).json(produto)
@@ -109,11 +116,17 @@ router.put("/:id", async (req, res) => {
   } = valida.data
 
   try {
-    const produto = await prisma.produto.update({
+    const produto = await prisma.produtos.update({
       where: { id: Number(id) },
       data: {
-        nome, descricao, preco, estoque,
-        foto, unidade, destaque, categoriaId
+        nome,
+        descricao: descricao ?? null,
+        preco,
+        estoque,
+        foto: foto ?? null,
+        unidade,
+        destaque,
+        categoriaId
       }
     })
     res.status(200).json(produto)
@@ -133,17 +146,33 @@ router.patch("/:id", async (req, res) => {
   }
 
   try {
-    const produto = await prisma.produto.update({
+    // Preparar dados para atualização
+    const updateData: any = { ...valida.data }
+    
+    // Tratar campos que podem ser null
+    if ('descricao' in updateData) {
+      updateData.descricao = updateData.descricao ?? null
+    }
+    
+    if ('foto' in updateData) {
+      updateData.foto = updateData.foto ?? null
+    }
+    
+    // Tratar categoriaId separadamente se existir
+    if (updateData.categoriaId !== undefined) {
+      updateData.categoria = { connect: { id: updateData.categoriaId } }
+      delete updateData.categoriaId
+    }
+
+    const produto = await prisma.produtos.update({
       where: { id: Number(id) },
-      data: valida.data, // só os campos enviados são aplicados
+      data: updateData,
     })
     res.status(200).json(produto)
   } catch (error) {
     res.status(400).json({ error })
   }
 })
-
-
 
 // Pesquisa de produtos (por nome, categoria, preço ou estoque)
 router.get("/pesquisa/:termo", async (req, res) => {
@@ -153,12 +182,12 @@ router.get("/pesquisa/:termo", async (req, res) => {
   if (isNaN(termoNumero)) {
     // Pesquisa por texto
     try {
-      const produtos = await prisma.produto.findMany({
-        include: { categoria: true },
+      const produtos = await prisma.produtos.findMany({
+        include: { categorias: true },
         where: {
           OR: [
             { nome: { contains: termo, mode: "insensitive" } },
-            { categoria: { nome: { contains: termo, mode: "insensitive" } } }
+            { categorias: { nome: { contains: termo, mode: "insensitive" } } }
           ]
         }
       })
@@ -169,12 +198,12 @@ router.get("/pesquisa/:termo", async (req, res) => {
   } else {
     // Pesquisa numérica
     try {
-      const produtos = await prisma.produto.findMany({
-        include: { categoria: true },
+      const produtos = await prisma.produtos.findMany({
+        include: { categorias: true },
         where: {
           OR: [
             { preco: { lte: termoNumero } },   // preço até X
-            { estoque: { gte: termoNumero } }  // estoque maior/igual a X
+            { estoque: { gte: termoNumero } }  
           ]
         }
       })

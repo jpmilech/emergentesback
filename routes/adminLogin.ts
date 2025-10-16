@@ -9,49 +9,46 @@ const router = Router()
 router.post("/", async (req, res) => {
   const { email, senha } = req.body
 
-  // em termos de segurança, o recomendado é exibir uma mensagem padrão
-  // a fim de evitar de dar "dicas" sobre o processo de login para hackers
   const mensaPadrao = "Login ou senha incorretos"
 
   if (!email || !senha) {
-    // res.status(400).json({ erro: "Informe e-mail e senha do usuário" })
     res.status(400).json({ erro: mensaPadrao })
     return
   }
 
   try {
-    const cliente = await prisma.cliente.findFirst({
+    const admin = await prisma.admin.findFirst({
       where: { email }
     })
 
-    if (cliente == null) {
-      // res.status(400).json({ erro: "E-mail inválido" })
+    if (admin == null) {
       res.status(400).json({ erro: mensaPadrao })
       return
     }
 
-    // se o e-mail existe, faz-se a comparação dos hashs
-    if (bcrypt.compareSync(senha, cliente.senha)) {
-      // se confere, gera e retorna o token
+    if (bcrypt.compareSync(senha, admin.senha)) {
       const token = jwt.sign({
-        clienteLogadoId: cliente.id,
-        clienteLogadoNome: cliente.nome
+        adminLogadoId: admin.id,
+        adminLogadoNome: admin.nome,
+        adminLogadoNivel: admin.nivel
       },
         process.env.JWT_KEY as string,
         { expiresIn: "1h" }
       )
 
       res.status(200).json({
-        id: cliente.id,
-        nome: cliente.nome,
-        email: cliente.email,
+        id: admin.id,
+        nome: admin.nome,
+        email: admin.email,
+        nivel: admin.nivel,
         token
       })
     } else {
       res.status(400).json({ erro: mensaPadrao })
     }
   } catch (error) {
-    res.status(400).json(error)
+    console.error("Erro no login admin:", error)
+    res.status(500).json({ erro: "Erro interno do servidor" })
   }
 })
 

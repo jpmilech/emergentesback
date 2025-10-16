@@ -1,30 +1,34 @@
-import express, { Request, Response } from 'express'
+import express from 'express'
 import cors from 'cors'
 
 import routesCategorias from './routes/categorias'
 import routesProdutos from './routes/produtos'
-import routesClientes from './routes/clientes'
 import routesLogin from './routes/login'
+import routesClientes from './routes/clientes'
+import routesPropostas from './routes/propostas'
+import routesDashboard from './routes/dashboard'
+import routesAdminLogin from './routes/adminLogin'
+import routesAdmins from './routes/admins'
 
 const app = express()
 const port = 3000
 
-// Middlewares
-app.use(cors())
 app.use(express.json())
+app.use(cors())
 
-// Rotas
-app.use("/categorias", routesCategorias)      // GET, POST categorias
-app.use("/produtos", routesProdutos)          // GET, POST produtos
-app.use("/clientes", routesClientes)          // cadastro: /clientes/cadastro
-app.use("/login", routesLogin)                // login: /login
+app.use("/categorias", routesCategorias)
+app.use("/produtos", routesProdutos)
+app.use("/clientes/login", routesLogin) 
+app.use("/clientes", routesClientes)
+app.use("/propostas", routesPropostas)
+app.use("/dashboard", routesDashboard)
+app.use("/admins/login", routesAdminLogin) 
+app.use("/admins", routesAdmins)
 
-// Rota principal
-app.get("/", (req: Request, res: Response) => {
-  res.send("🚜🌱 API ConnectAgro funcionando!")
+app.get('/', (req, res) => {
+  res.send('API: Venda de Produtos')
 })
 
-// Start server
 app.listen(port, () => {
   console.log(`Servidor rodando na porta: ${port}`)
 })

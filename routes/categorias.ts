@@ -15,7 +15,7 @@ const categoriaSchema = z.object({
 // Listar categorias
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const categorias = await prisma.categorias.findMany()
+    const categorias = await prisma.categoria.findMany()
     res.status(200).json(categorias)
   } catch (error) {
     res.status(500).json({ erro: error })
@@ -33,7 +33,7 @@ router.post("/", async (req: Request, res: Response) => {
   const { nome } = valida.data
 
   try {
-    const categorias = await prisma.categorias.create({
+    const categorias = await prisma.categoria.create({
       data: { nome }
     })
     res.status(201).json(categorias)
@@ -47,7 +47,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params
 
   try {
-    const categorias = await prisma.categorias.delete({
+    const categorias = await prisma.categoria.delete({
       where: { id: Number(id) }
     })
     res.status(200).json(categorias)
@@ -69,7 +69,7 @@ router.put("/:id", async (req: Request, res: Response) => {
   const { nome } = valida.data
 
   try {
-    const categorias = await prisma.categorias.update({
+    const categorias = await prisma.categoria.update({
       where: { id: Number(id) },
       data: { nome }
     })

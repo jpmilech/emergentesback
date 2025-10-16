@@ -1,46 +1,79 @@
-// Prisma Schema - Agro
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgres"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Categorias {
-  id        Int       @id @default(autoincrement())
-  nome      String    @db.VarChar(50)
-  produtos  Produto[]
+model Categoria {
+  id          Int           @id @default(autoincrement())
+  nome        String        @db.VarChar(30)
+  produtos Produtos[]
+
   @@map("categorias")
 }
 
-model Produto {
-  id          Int        @id @default(autoincrement())
-  nome        String     @db.VarChar(60)
-  descricao   String?    @db.VarChar(255)
-  preco       Decimal    @db.Decimal(10, 2)
-  estoque     Int        @default(0)    // quantidade em estoque
-  unidade     Unidade    @default(UNIDADE)
-  foto        String?
-  destaque    Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt()
-  categoria   Categorias  @relation(fields: [categoriaId], references: [id])
-  categoriaId Int
-  @@map("produtos")
+model Cliente {
+  id        String     @id @default(uuid()) @db.VarChar(36)
+  nome      String     @db.VarChar(60)
+  email     String     @db.VarChar(40)
+  senha     String     @db.VarChar(60)
+  cidade    String     @db.VarChar(30)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  propostas Proposta[]
+
+  @@map("clientes")
 }
 
-model Cliente {
-  id        Int      @id @default(autoincrement())
-  nome      String   @db.VarChar(60)
-  email     String   @db.VarChar(40)
-  senha     String   @db.VarChar(60)   // senha bcrypt
-  cidade    String   @db.VarChar(30) 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@map("clientes")
+model Proposta {
+  id           Int         @id @default(autoincrement())
+  clienteId    String      @db.VarChar(36)
+  descricao    String      @db.VarChar(255)
+  resposta     String?     @db.VarChar(255)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  adminId      String?     @db.VarChar(36)
+  produtoId Int
+  admin        Admin?      @relation(fields: [adminId], references: [id])
+  cliente      Cliente     @relation(fields: [clienteId], references: [id])
+  produto   Produtos @relation(fields: [produtoId], references: [id])
+
+  @@map("propostas")
+}
+
+model Admin {
+  id          String        @id @default(uuid()) @db.VarChar(36)
+  nome        String        @db.VarChar(60)
+  email       String        @db.VarChar(40)
+  senha       String        @db.VarChar(60)
+  nivel       Int           @default(2) @db.SmallInt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  produtos Produtos[]
+  propostas   Proposta[]
+
+  @@map("admins")
+}
+
+model Produtos {
+  id          Int          @id @default(autoincrement())
+  nome        String     @db.VarChar(60)
+  descricao   String?    @db.VarChar(255)
+  preco       Decimal      @db.Decimal(10, 2)
+  foto        String?
+  estoque     Int        @default(0)
+  unidade     Unidade    @default(UNIDADE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  destaque    Boolean      @default(true)
+  categoriaId     Int
+  adminId     String?      @db.VarChar(36)
+  admins      Admin?       @relation(fields: [adminId], references: [id])
+  categorias      Categoria        @relation(fields: [categoriaId], references: [id])
+  propostas   Proposta[]
 }
 
 enum Unidade {
@@ -50,6 +83,3 @@ enum Unidade {
   TONELADA
   UNIDADE
 }
-
-
-
