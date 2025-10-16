@@ -52,6 +52,31 @@ router.get("/:id", async (req, res) => {
   }
 })
 
+// Listar produtos em destaque
+router.get("/destaque/destaques", async (req, res) => {
+  try {
+    const produtos = await prisma.produtos.findMany({
+      where: { 
+        destaque: true 
+      },
+      include: {
+        categorias: true,
+      },
+      orderBy: { 
+        createdAt: 'desc' 
+      },
+      take: 8
+    });
+
+    res.status(200).json(produtos);
+  } catch (error) {
+    console.error("Erro ao buscar produtos em destaque:", error);
+    res.status(500).json({ 
+      erro: "Erro interno do servidor ao buscar produtos em destaque" 
+    });
+  }
+});
+
 // Cadastrar novo produto
 router.post("/", async (req, res) => {
   const valida = produtoSchema.safeParse(req.body)
