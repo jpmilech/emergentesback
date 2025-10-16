@@ -81,4 +81,5 @@ enum Unidade {
   LITRO
   SACA
   TONELADA
+  UNIDADE
 }
